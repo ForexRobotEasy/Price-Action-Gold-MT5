@@ -1,0 +1,125 @@
+
+// Price Action Gold MT5 - Expert Advisor for trading gold in the forex market
+// Developer's site: forexroboteasy.com
+// Developed by: Forex Robot Easy Team
+
+// Include necessary libraries and indicators
+#include <Trade\Trade.mqh>
+#include <Indicators\Indicators.mqh>
+
+// Define input parameters
+input double riskLevel = 0.01; // Risk level for each trade
+input double lotSize = 0.1; // Lot size for each trade
+input bool useIndicator1 = true; // Use indicator 1 for trade strategy
+input bool useIndicator2 = true; // Use indicator 2 for trade strategy
+// ... add more input parameters for other indicators
+
+// Define global variables
+double stopLoss = 100; // Fixed stop loss level for each trade
+double takeProfit = 200; // Fixed take profit level for each trade
+
+// Initialize trade object
+CTrade trade;
+
+// Initialize indicator objects
+CIndicator indicator1;
+CIndicator indicator2;
+// ... initialize more indicator objects for other indicators
+
+// Define trading function
+void tradeGold()
+{
+    // Get current indicator values
+    double indicatorValue1 = indicator1.GetValue();
+    double indicatorValue2 = indicator2.GetValue();
+    // ... get values for other indicators
+
+    // Determine trade direction based on indicator values
+    ENUM_ORDER_TYPE tradeDirection;
+    if (useIndicator1 && useIndicator2)
+    {
+        if (indicatorValue1 > indicatorValue2)
+            tradeDirection = ORDER_TYPE_BUY;
+        else
+            tradeDirection = ORDER_TYPE_SELL;
+    }
+    else if (useIndicator1)
+    {
+        if (indicatorValue1 > 0)
+            tradeDirection = ORDER_TYPE_BUY;
+        else
+            tradeDirection = ORDER_TYPE_SELL;
+    }
+    // ... add conditions for other indicator combinations
+
+    // Open trade with fixed stop loss and take profit levels
+    trade.Buy(lotSize, stopLoss, takeProfit);
+}
+
+// Define risk management function
+void manageRisk()
+{
+    // Calculate trade volume based on risk level
+    double accountBalance = AccountInfoDouble(ACCOUNT_BALANCE);
+    double tradeVolume = accountBalance * riskLevel;
+
+    // Calculate lot size based on trade volume and gold price
+    double goldPrice = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+    double calculatedLotSize = tradeVolume / goldPrice;
+
+    // Set lot size for trades
+    trade.SetVolume(calculatedLotSize);
+}
+
+// Define main entry function
+void OnTick()
+{
+    // Check if risk management is required
+    if (riskLevel > 0)
+        manageRisk();
+
+    // Execute trading function
+    tradeGold();
+}
+
+// Define error handling function
+void OnTradeError(const string& message)
+{
+    Print('Trade error: ', message);
+    // ... handle trade errors or system crashes
+}
+
+// Define initialization function
+void OnInit()
+{
+    // Initialize indicator objects with necessary parameters
+    indicator1.Init();
+    indicator2.Init();
+    // ... initialize more indicator objects with parameters
+
+    // Set trade parameters
+    trade.SetStopLoss(stopLoss);
+    trade.SetTakeProfit(takeProfit);
+
+    // Set error handling function
+    trade.SetErrorHandler(OnTradeError);
+}
+
+// Define deinitialization function
+void OnDeinit(const int reason)
+{
+    // ... cleanup and release resources
+}
+
+// Define module entry point
+int OnInitExpert()
+{
+    OnInit();
+    return(INIT_SUCCEEDED);
+}
+
+// Define module exit point
+void OnDeinitExpert()
+{
+    OnDeinit(0);
+}
